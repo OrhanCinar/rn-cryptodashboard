@@ -9,9 +9,7 @@ import {
   FlatList,
   View
 } from "react-native";
-import { WebBrowser } from "expo";
-
-import { MonoText } from "../components/StyledText";
+import { ListItem, Button, ThemeProvider, Icon } from "react-native-elements";
 
 const coinList = [
   {
@@ -36,11 +34,35 @@ const coinList = [
     price: 0
   },
   {
-    id: "tusdbtc",
+    id: "elfbtc",
     price: 0
   },
   {
-    id: "ethtusd",
+    id: "xrpbtc",
+    price: 0
+  },
+  {
+    id: "storjbtc",
+    price: 0
+  },
+  {
+    id: "mcobtc",
+    price: 0
+  },
+  {
+    id: "manabtc",
+    price: 0
+  },
+  {
+    id: "steembtc",
+    price: 0
+  },
+  {
+    id: "gntbtc",
+    price: 0
+  },
+  {
+    id: "sysbtc",
     price: 0
   }
 ];
@@ -53,7 +75,11 @@ function getCoinEndPoints() {
 
   return endPoint;
 }
-
+const theme = {
+  colors: {
+    primary: "pink"
+  }
+};
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
     header: null
@@ -88,15 +114,21 @@ export default class HomeScreen extends React.Component {
 
       const id = data["s"].toLowerCase();
       const price = data["c"];
-
-      console.log(id);
+      let coinExists = this.state.coinList.find(c => c.id === id);
+      //console.log(id);
 
       switch (data.e) {
         case "24hrMiniTicker":
           this.setState({
             ...this.state,
             coinList: this.state.coinList.map(c =>
-              c.id === id ? { ...c, price: price } : c
+              c.id === id
+                ? {
+                    ...c,
+                    price: price,
+                    priceChange: coinExists.price > price ? "down" : "up"
+                  }
+                : c
             )
           });
           break;
@@ -108,23 +140,41 @@ export default class HomeScreen extends React.Component {
   componentDidMount() {
     this.startSocket();
   }
+  keyExtractor = (item, index) => item.id;
+  renderItem = ({ item }) => {
+    console.log(item.priceChange);
+    <ListItem
+      style={{
+        color: item.priceChange === "up" ? styles.greenRow : styles.redRow
+      }}
+      title={"item.id"}
+      price={"item.price"}
+    />;
+  };
 
   render() {
     return (
-      <View style={styles.container}>
-        <FlatList
-          data={this.state.coinList}
-          renderItem={({ item }) => (
-            <Text>
-              {item.id.toUpperCase()} {item.price}
-            </Text>
-          )}
-          keyExtractor={({ id }, index) => id}
-        />
-      </View>
+      <ThemeProvider theme={theme}>
+        <View style={styles.container}>
+          <ScrollView>
+            {this.state.coinList.map((item, i) => (
+              <ListItem
+                key={item.id}
+                title={`${item.id.toUpperCase()}`}
+                subtitle={item.price.toString()}
+                leftIcon={{ name: "toll" }}
+                subtitleStyle={
+                  item.priceChange === "up" ? styles.greenRow : styles.redRow
+                }
+              />
+            ))}
+          </ScrollView>
+        </View>
+      </ThemeProvider>
     );
   }
 }
+<Icon name="arrow_drop_do" />;
 
 const styles = StyleSheet.create({
   container: {
@@ -141,6 +191,12 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingTop: 30
+  },
+  redRow: {
+    color: "red"
+  },
+  greenRow: {
+    color: "green"
   },
   welcomeContainer: {
     alignItems: "center",
